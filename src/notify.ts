@@ -22,7 +22,15 @@ export async function sendEmail(msg: Message, env: Env, fetchFn: typeof fetch = 
       text: msg.body,
     }),
   });
-  if (!res.ok) throw new Error(`Resend returned HTTP ${res.status}: ${await res.text()}`);
+  if (!res.ok) {
+    // Logs of a public repo are public: report only the error *type*, never Resend's
+    // message, which can contain the account's email address.
+    const name = await res
+      .json()
+      .then((j: { name?: unknown }) => (typeof j?.name === "string" ? j.name : "unknown_error"))
+      .catch(() => "unknown_error");
+    throw new Error(`Resend returned HTTP ${res.status} (${name})`);
+  }
 }
 
 export async function sendNtfy(msg: Message, env: Env, fetchFn: typeof fetch = fetch): Promise<void> {
