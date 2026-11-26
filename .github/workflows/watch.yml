@@ -2,7 +2,9 @@ name: Watch Dune IMAX showings
 
 on:
   schedule:
-    - cron: "*/30 * * * *" # every 30 minutes (UTC); GitHub may start runs a few minutes late
+    # :07 and :37 past each hour (UTC). Off-peak minutes: GitHub delays or drops
+    # scheduled runs most at :00 and :30. Scheduled runs are best-effort.
+    - cron: "7,37 * * * *"
   workflow_dispatch: {} # "Run workflow" button for manual checks
 
 permissions:
