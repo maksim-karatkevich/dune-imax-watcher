@@ -1,0 +1,47 @@
+name: Watch Dune IMAX showings
+
+on:
+  schedule:
+    - cron: "*/30 * * * *" # every 30 minutes (UTC); GitHub may start runs a few minutes late
+  workflow_dispatch: {} # "Run workflow" button for manual checks
+
+permissions:
+  contents: write # to commit seen.json back
+
+concurrency:
+  group: watch
+  cancel-in-progress: false # never cut a run off mid-notification
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Check for new showings
+        run: npm start
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+
+      - name: Save seen showings
+        run: |
+          git add seen.json
+          if git diff --cached --quiet; then
+            echo "seen.json unchanged"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: update seen showings"
+          git pull --rebase
+          git push
