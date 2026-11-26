@@ -1,0 +1,13 @@
+{
+  "name": "dune-imax-watcher",
+  "private": true,
+  "type": "module",
+  "description": "Alerts when new IMAX (EN + PL subs) showings of Dune: Part Three appear at Cinema City Kraków",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "node --test \"test/**/*.test.ts\"",
+    "start": "node src/main.ts"
+  }
+}
