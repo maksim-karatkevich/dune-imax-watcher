@@ -4,6 +4,10 @@ Checks Cinema City Kraków every 30 minutes for **new IMAX showings of Dune: Par
 in English with Polish subtitles**, and sends an email + phone push when one appears.
 
 - Runs on GitHub Actions (`.github/workflows/watch.yml`), no server needed.
+- **Triggered every 30 minutes by [cron-job.org](https://cron-job.org)**, which calls GitHub's
+  `workflow_dispatch` API. GitHub's own `schedule` trigger is best-effort and fired only once in the
+  first ~23 hours on this new repo. It stays in the workflow as a backup; extra runs are harmless because
+  a showing never alerts twice.
 - Reads the same public JSON API the cinema-city.pl page uses.
 - Remembers which showings it has already reported in `seen.json`, so each showing is reported once.
 - First run sends a single "watcher is live" message.
@@ -24,6 +28,14 @@ in English with Polish subtitles**, and sends an email + phone push when one app
    | `NTFY_TOPIC` | your ntfy topic name |
 
 4. Actions tab → **Watch Dune IMAX showings** → **Run workflow** to test.
+5. **External trigger:** create a fine-grained GitHub token (this repo only, *Actions: Read and write*),
+   then a cron-job.org job, every 30 minutes:
+   - `POST https://api.github.com/repos/maksim-karatkevich/dune-imax-watcher/actions/workflows/watch.yml/dispatches`
+   - Headers: `Authorization: Bearer <token>`, `Accept: application/vnd.github+json`,
+     `X-GitHub-Api-Version: 2022-11-28`, `Content-Type: application/json`
+   - Body: `{"ref":"main"}`. Expect `204 No Content`.
+
+   The token expires (the current one on 2027-01-26). After that, runs quietly stop, so renew it if the watch is still needed.
 
 ## Watching it
 
@@ -34,7 +46,8 @@ in English with Polish subtitles**, and sends an email + phone push when one app
 
 ## Stopping
 
-Actions tab → the workflow → **⋯** → **Disable workflow**.
+Disable the cron-job.org job, then Actions tab → the workflow → **⋯** → **Disable workflow**.
+Delete the GitHub token too.
 
 ## Development
 
